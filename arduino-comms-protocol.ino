@@ -27,15 +27,9 @@ Protocol:
         2 = Digital Read
             Pin #
 
-    For example write digital pin 13 high: 1.2.13.1.            
+    For example:  write digital pin 13 high: 1.2.13.1.
+                  read analogue pin A0: 2.1.0.
 *****************************************************************************/
-
-//#include <SoftwareSerial.h>
-#include <LiquidCrystal.h>
-
-//SoftwareSerial lcd(11, 12);  //Rx, Tx
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
-
 
 double FW_Version = 1.1;
 unsigned long serialData;
@@ -48,21 +42,7 @@ int sensorVal;
 void setup()
 {
   Serial.begin(115200);
-  //Serial lcd init
-  //lcd.begin(9600);
-  //delay(200);
-  //lcd.write(254); // move cursor to beginning of first line
-  //lcd.write(128);
-  //lcd.write("                ");
-  //lcd.write("                ");
-  //lcd.write("Comms Protocol: ");
-  //lcd.write("Firmware v1.1");
-  
-  //standard lcd init
-  lcd.begin(16, 2);
-  lcd.print("Comms Protocol:");
-  lcd.setCursor(0, 1);
-  lcd.print("Firmware v1.1");
+  delay(200);
 }
 
 void loop()
@@ -74,62 +54,32 @@ void loop()
     {
       Serial.print("Firmware Version: ");
       Serial.println(FW_Version);
-      /*
-      lcd.write(254); // move cursor to beginning of first line
-      lcd.write(128);
-      lcd.write("                ");
-      lcd.write("                ");
-      lcd.write("Comms Protocol: ");
-      lcd.write("Firmware v1.1");
-      */
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Comms Protocol:");
-      lcd.setCursor(0, 1);
-      lcd.print("Firmware v1.1");
       break; 
     }
-  case 1:
+  case 1:       //write analog/digital
     {
-      //write analog/digital
       getSerial();
       switch (serialData)
       {
-      case 1:
+      case 1:   //write analog (PWM)
         {
-          //write analog
           getSerial();
           pinNumber = serialData;
           getSerial();
           pwmVal = serialData;
           pinMode(pinNumber, OUTPUT);
           analogWrite(pinNumber, pwmVal);
-          /*
-          lcd.write(254); // move cursor to beginning of first line
-          lcd.write(128);
-          lcd.write("                ");
-          lcd.write("                ");
-          lcd.write("Analog Write:   ");
-          lcd.write("Pin ");
-          lcd.print(pinNumber);
-          lcd.write(" = ");
-          lcd.print(pwmVal);
-          */
-          lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.print("Analog Write:");
-          lcd.setCursor(0, 1);
-          lcd.print("Pin ");
-          lcd.print(pinNumber);
-          lcd.print(" = ");
-          lcd.print(pwmVal);
+          
+          Serial.print("Write: PWM: Pin ");
+          Serial.print(pinNumber);
+          Serial.print(" = ");
+          Serial.println(pwmVal);
           
           pinNumber = 0;
           break;
         }
-      case 2:
+      case 2:       //write digital
         {
-          //write digital
           getSerial();
           pinNumber = serialData;
           getSerial();
@@ -143,25 +93,10 @@ void loop()
           {
             digitalWrite(pinNumber, HIGH);
           }
-          /*
-          lcd.write(254); // move cursor to beginning of first line
-          lcd.write(128);
-          lcd.write("                ");
-          lcd.write("                ");
-          lcd.write("Digital Write:  ");
-          lcd.write("Pin ");
-          lcd.print(pinNumber);
-          lcd.write(" = ");
-          lcd.print(digitalState);
-          */
-          lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.print("Digital Write:");
-          lcd.setCursor(0, 1);
-          lcd.print("Pin ");
-          lcd.print(pinNumber);
-          lcd.print(" = ");
-          lcd.print(digitalState);
+          Serial.print("Write: Digital: Pin ");
+          Serial.print(pinNumber);
+          Serial.print(" = ");
+          Serial.println(digitalState);
           
           pinNumber = 0;
           break;
@@ -169,77 +104,45 @@ void loop()
      }
      break; 
     }
-   case 2:
+   case 2:        //read
     {
       getSerial();
       switch (serialData)
       {
-      case 1:
+      case 1:     //read analogue
         {
-          //analog read
           int x = 0;
           getSerial();
           pinNumber = serialData;
           pinMode(pinNumber, INPUT);
           sensorVal = analogRead(pinNumber);  //read adc channel and then clear variable to remove any latent charge
           sensorVal = 0;
-          for (int i = 0; i <= 2; i++){  //3 sample averaging filter
+          for (int i = 0; i <= 2; i++){       //3 point averaging filter
               sensorVal = sensorVal + analogRead(pinNumber);
           }
           sensorVal = sensorVal / 3;
+          
+          Serial.print("Read: Analogue: Pin ");
+          Serial.print(pinNumber);
+          Serial.print(" = ");
           Serial.println(sensorVal);
-          /*
-          lcd.write(254); // move cursor to beginning of first line
-          lcd.write(128);
-          lcd.write("                ");
-          lcd.write("                ");
-          lcd.write("Analog Read:    ");
-          lcd.write("Pin ");
-          lcd.print(pinNumber);
-          lcd.write(" = ");
-          lcd.print(sensorVal);
-          */
-          lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.print("Analog Read:");
-          lcd.setCursor(0, 1);
-          lcd.print("Pin ");
-          lcd.print(pinNumber);
-          lcd.print(" = ");
-          lcd.print(sensorVal);
           
           sensorVal = 0;
           pinNumber = 0;
           break;
         } 
-      case 2:
+      case 2:     //read digital
         {
-          //digital read
           getSerial();
           pinNumber = serialData;
           pinMode(pinNumber, INPUT);
           sensorVal = digitalRead(pinNumber);
-          Serial.println(sensorVal);
-          /*
-          lcd.write(254); // move cursor to beginning of first line
-          lcd.write(128);
-          lcd.write("                ");
-          lcd.write("                ");
-          lcd.write("Digital Read:   ");
-          lcd.write("Pin ");
-          lcd.print(pinNumber);
-          lcd.write(" = ");
-          lcd.print(sensorVal);
-          */
-          lcd.clear();
-          lcd.setCursor(0, 0);
-          lcd.print("Digital Read:");
-          lcd.setCursor(0, 1);
-          lcd.print("Pin ");
-          lcd.print(pinNumber);
-          lcd.print(" = ");
-          lcd.print(sensorVal);
           
+          Serial.print("Read: Digital: Pin ");
+          Serial.print(pinNumber);
+          Serial.print(" = ");
+          Serial.println(sensorVal);
+
           sensorVal = 0;
           pinNumber = 0;
           break;
